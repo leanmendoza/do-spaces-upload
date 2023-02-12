@@ -1,0 +1,15 @@
+name: "Upload to Digital Ocean Spaces"
+branding:
+  icon: "package"
+  color: "red"
+description: "Upload to Digital Ocean Spaces from GitHub Actions"
+runs:
+  using: "node16"
+  main: "dist/index.js"
+outputs:
+  info:
+    description: info output
+inputs:
+  source-path:
+    description: "Source path - it can be a file or directory"
+    required: true
