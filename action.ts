@@ -1,20 +1,21 @@
 #!/usr/bin/env node
 
 import core = require("@actions/core");
-import { existsSync, statSync } from "fs";
-const AWS = require("aws-sdk");
-const fs = require('fs');
+import AWS from 'aws-sdk';
+import { existsSync, readdirSync, readFileSync, statSync } from "fs";
+import path from 'path';
 
-async function uploadFile(sourcefilePath: string, destFilePath: string, bucketName: string, client: any) {
+async function uploadFile(sourcefilePath: string, destFilePath: string, bucketName: string, client: AWS.S3) {
 
     // Reads the file into a Buffer
-    const fileBuffer = fs.readFileSync(sourcefilePath);
+    const fileBuffer = readFileSync(sourcefilePath);
 
     // Set the params for the upload
-    const params = {
+    const params: AWS.S3.PutObjectRequest = {
         Bucket: bucketName,
         Key: destFilePath,
-        Body: fileBuffer
+        Body: fileBuffer,
+        ACL: "public-read"
     };
 
     // Uploads the file to the bucket
@@ -64,14 +65,22 @@ async function run() {
         throw new Error(`Path '${SOURCE_PATH}' does not exist.`)
     }
 
-    const files: string[] = []
+    const files: {
+        localPath: string
+        destPath: string
+    }[] = []
     if (statSync(SOURCE_PATH).isDirectory()) {
-        throw new Error(`Directory '${SOURCE_PATH}' is not supported yet.`)
+        const dirFiles = readdirSync(SOURCE_PATH)
+        for (const file of dirFiles) {
+            files.push({ localPath: path.resolve(SOURCE_PATH, file), destPath: path.resolve(DEST_PATH, file) })
+        }
     } else {
-        files.push(SOURCE_PATH)
+        files.push({ localPath: SOURCE_PATH, destPath: DEST_PATH })
     }
 
-    await uploadFile(SOURCE_PATH, DEST_PATH, BUCKET_NAME, client)
+    for (const file of files) {
+        await uploadFile(file.localPath, file.destPath, BUCKET_NAME, client)
+    }
 }
 
 run()
