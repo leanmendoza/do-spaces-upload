@@ -13,7 +13,8 @@ async function uploadFile(sourcefilePath: string, destFilePath: string, bucketNa
     const params: AWS.S3.PutObjectRequest = {
         Bucket: bucketName,
         Key: destFilePath,
-        Body: fileBuffer
+        Body: fileBuffer,
+        ACL: 'public-read'
     };
 
     // Uploads the file to the bucket
